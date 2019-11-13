@@ -45,6 +45,26 @@ void aff(int scores[20][38]) {
 	}
 }
 
+static const GLfloat g_vertex_buffer_data[] = {
+   -0.8f, -0.8f, 0.0f,
+   0.8f, -0.8f, 0.0f,
+   -0.8f,  0.8f, 0.0f,
+
+   0.8f, 0.8f, 0.0f,
+   0.8f, -0.8f, 0.0f,
+   -0.8f,  0.8f, 0.0f,
+
+};
+
+string updateRanks(int teams, int ranks[][]){
+	for(int i=0; i<20; i++){
+		for(int j=0;i<38;j++){
+			glDrawArrays(GL_LINES(ranks[i][j],ranks[i][j+1])) 
+
+
+
+
+
 int main() {
 	string rawCSV = readCSVFile("../data/rankspts.csv");
 	string teams[20];
