@@ -205,6 +205,11 @@ void addCylinder(int cylIdx, int faceNb, vec3 p1, vec3 p2, vec4 color, GLfloat g
 		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+16] = cos(angle)*r+p1.y;
 		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+17] = sin(angle)*r+p1.z;
 	}
+	for (int i = cylIdx*faceNb*18; i < (cylIdx+1)*faceNb*18; i+=3) {
+		g_vertex_color_data[i] = color.x;
+		g_vertex_color_data[i+1] = color.y;
+		g_vertex_color_data[i+2] = color.z;
+	}
 }
 
 
@@ -258,18 +263,6 @@ int main() {
 			addCylinder(j*20+i, nbFaces, vec3((i-19)/19.0, 0, ranks[j][i]*coefWidth),vec3((i-18)/19.0, 0, ranks[j][i+1]*coefWidth), vec4(1,1,1,1), g_vertex_buffer_data, g_vertex_color_data); 
 		}
 	}
-	for (int i = 0; i < nbVertex; i++) {
-		g_vertex_color_data[i] = 1.0;
-	
-	}
-
-	
-	
-	
-	
-	
-	
-	
 	
 	glfwMakeContextCurrent(window); // Initialise GLEW
 	glewExperimental=true; // Nécessaire dans le profil de base
