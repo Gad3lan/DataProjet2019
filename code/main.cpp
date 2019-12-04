@@ -1,3 +1,12 @@
+// sous mac 
+// g++ -I/usr/local/include/ -lglfw -lGLEW main.cpp -framework OpenGL  -omain 
+// ./main
+
+// sous linux 	
+// g++ -I/usr/local/include/ -I/public/ig/glm/ -c main.cpp  -omain.o
+// g++ -I/usr/local main.o -lglfw  -lGLEW  -lGL  -omain
+// ./main
+
 #include <sstream>
 #include <stdio.h>
 #include <string>
@@ -172,23 +181,31 @@ void aff(int scores[20][38]) {
 
 
 
-/**GLfloat* loadCoord(int ranks[][]){
-	float coefHeight = height/21;
-	float coefWidth = weight/39;
-	GLfloat g_vertex_buffer_data[38];
-	for (int j=0; j<20; j++){
-		for(int i=0;i<228;i+6){
-			g_vertex_buffer_data[i] = (ranks[j][i]+1)*coefWidth;
-			g_vertex_buffer_data[i+1] = (ranks[j][i]+1)*coefHeight;
-			g_vertex_buffer_data[i+2] = 0;
-			g_vertex_buffer_data[i+3] = (ranks[j][i+1]+1)*coefWidth;
-			g_vertex_buffer_data[i+4] = (ranks[j][i+1]+1)*coefHeight;
-			g_vertex_buffer_data[i+5] = 0;
-		}
+void addCylinder(int cylIdx, int faceNb, vec3 p1, vec3 p2, vec4 color, GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[]) {
+	float r = 0.0002;
+	for (int i = 0; i < faceNb; i++) {
+		float angle = (M_PI/faceNb)*i;
+		float nextAngle = (M_PI/faceNb)*(i+1);
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i] = p2.x;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+1] = cos(angle)*r+p2.y;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+2] = sin(angle)*r*p2.z;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+3] = p2.x;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+4] = cos(nextAngle)*r+p2.y;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+5] = sin(nextAngle)*r+p2.z;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+6] = p1.x;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+7] = cos(angle)*r+p1.y;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+8] = sin(angle)*r+p1.z;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+9] = p2.x;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+10] = cos(nextAngle)*r+p2.y;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+11] = sin(nextAngle)*r+p2.z;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+12] = p1.x;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+13] = cos(nextAngle)*r+p1.y;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+14] = sin(nextAngle)*r+p1.z;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+15] = p1.x;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+16] = cos(angle)*r+p1.y;
+		g_vertex_buffer_data[(cylIdx*faceNb*18)+18*i+17] = sin(angle)*r+p1.z;
 	}
-		return g_vertex_buffer_data[];
 }
-**/
 
 
 int main() {
@@ -196,14 +213,14 @@ int main() {
 	string teams[20];
 	int ranks[20][38];
 	int scores[20][38];
-	cout<<__LINE__<<endl;
+
 	parse(rawCSV, teams, scores, ranks);
 	aff(scores);
 
 	
 	if( !glfwInit() ) {
 	    fprintf( stderr, "Failed to initialize GLFW\n" );
-	    cout<<__LINE__<<endl;
+	  
 	    return -1;
 	}
 
@@ -216,14 +233,14 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Pour rendre MacOS heureux ; ne devrait pas être nécessaire
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // On ne veut pas l'ancien OpenGL
   glfwWindowHint(GLFW_DEPTH_BITS, 24);
-  	cout<<__LINE__<<endl;
+  
 	// Ouvre une fenêtre et crée son contexte OpenGl
 	GLFWwindow* window; // (Dans le code source qui accompagne, cette variable est globale)
 	window = glfwCreateWindow( 1024, 768, "Main 05", NULL, NULL);
 	if( window == NULL ){
 	    fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 	    glfwTerminate();
-	    cout<<__LINE__<<endl;
+	  
 	    return -1;
 	}
 
@@ -232,22 +249,18 @@ int main() {
 	glfwGetWindowSize(window,&width, &height);
 	float coefHeight = 0.5/21;
 	float coefWidth =1.0/20;
-	GLfloat g_vertex_buffer_data[4560];
+	int nbFaces = 10;
+	int nbVertex = 18*nbFaces*38*20;
+	GLfloat g_vertex_buffer_data[nbVertex];
+	GLfloat g_vertex_color_data[nbVertex];
 	for (int j=0; j<20; j++){
 		for(int i=0;i<37;i++){
-			g_vertex_buffer_data[j*228+6*i+0] = (i-19)/19.0;
-			g_vertex_buffer_data[j*228+6*i+1] = 0;
-			g_vertex_buffer_data[j*228+6*i+2] = (ranks[j][i])*coefWidth;
-			g_vertex_buffer_data[j*228+6*i+3] = (i-18)/19.0;
-			g_vertex_buffer_data[j*228+6*i+4] = 0;
-			g_vertex_buffer_data[j*228+6*i+5] =(ranks[j][i+1])*coefWidth;
-			cout<<__LINE__<<endl;
+			addCylinder(j*20+i, nbFaces, vec3((i-19)/19.0, 0, ranks[j][i]*coefWidth),vec3((i-18)/19.0, 0, ranks[j][i+1]*coefWidth), vec4(1,1,1,1), g_vertex_buffer_data, g_vertex_color_data); 
 		}
 	}
-	GLfloat g_vertex_color_data[4560];
-	for (int i = 0; i < 4560; i++) {
+	for (int i = 0; i < nbVertex; i++) {
 		g_vertex_color_data[i] = 1.0;
-		cout<<__LINE__<<endl;
+	
 	}
 
 	
@@ -262,7 +275,7 @@ int main() {
 	glewExperimental=true; // Nécessaire dans le profil de base
 	if (glewInit() != GLEW_OK) {
 	    fprintf(stderr, "Failed to initialize GLEW\n");
-	    cout<<__LINE__<<endl;
+	  
 	    return -1;
 	}
 
@@ -271,25 +284,20 @@ int main() {
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 	glDepthRange(-1, 1);
-cout<<__LINE__<<endl;
 	// Bon maintenant on cree le VAO et cette fois on va s'en servir !
   GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
-cout<<__LINE__<<endl;
 	// This will identify our vertex buffer
 	GLuint vertexbuffer;
 	// Generate 1 buffer, put the resulting identifier in vertexbuffer
 	glGenBuffers(1, &vertexbuffer);
-cout<<__LINE__<<endl;
 	// The following commands will talk about our 'vertexbuffer' buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	  // Only allocqte memory. Do not send yet our vertices to OpenGL.
 	  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data)+sizeof(g_vertex_color_data), 0, GL_STATIC_DRAW);
-cout<<__LINE__<<endl;
       // send vertices in the first part of the buffer
 	  glBufferSubData(GL_ARRAY_BUFFER, 0,                            sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
-cout<<__LINE__<<endl;
 	  // send colors in the second part of the buffer
 	  glBufferSubData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), sizeof(g_vertex_color_data), g_vertex_color_data);
 	
@@ -303,7 +311,6 @@ cout<<__LINE__<<endl;
 		   (void*)0            // array buffer offset
 		);
 		glEnableVertexAttribArray(0);
-cout<<__LINE__<<endl;
     glVertexAttribPointer( // same thing for the colors
     	1, 
     	3, 
@@ -312,13 +319,11 @@ cout<<__LINE__<<endl;
     	0, 
     	(void*)sizeof(g_vertex_buffer_data));
 		glEnableVertexAttribArray(1);
-cout<<__LINE__<<endl;
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// on desactive le VAO a la fin de l'initialisation
 	glBindVertexArray (0);
-cout<<__LINE__<<endl;
 
 	// Assure que l'on peut capturer la touche d'échappement enfoncée ci-dessous
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
@@ -328,7 +333,7 @@ cout<<__LINE__<<endl;
 	uniform_view     = glGetUniformLocation(programID, "viewMatrix");
 	uniform_model    = glGetUniformLocation(programID, "modelMatrix");
 
- cout<<__LINE__<<endl; 
+ 
   float angle = 0.0f;
 
 	do{
@@ -338,7 +343,6 @@ cout<<__LINE__<<endl;
 
     // Use our shader program
 		glUseProgram(programID); 
-cout<<__LINE__<<endl;
 		// onchange de matrice de projection : la projection orthogonale est plus propice a la visualization !
 		//glm::mat4 projectionMatrix = glm::perspective(glm::radians(66.0f), 1024.0f / 768.0f, 0.1f, 200.0f);
 		glm::mat4 projectionMatrix = glm::ortho( -1.0f, 1.0f, -1.0f, 1.0f, -3.f, 3.f );
@@ -352,7 +356,6 @@ cout<<__LINE__<<endl;
     glUniformMatrix4fv(uniform_proj,  1, GL_FALSE, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(uniform_view,  1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(uniform_model, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-cout<<__LINE__<<endl;
     // on re-active le VAO avant d'envoyer les buffers
     glBindVertexArray(VertexArrayID);
 
@@ -379,27 +382,23 @@ cout<<__LINE__<<endl;
 		glEnableVertexAttribArray(1);*/
 
 		// Draw the triangle(s) !
-		glDrawArrays(GL_LINES, 0, sizeof(g_vertex_buffer_data)/(3*sizeof(float))); // Starting from vertex 0 .. all the buffer 
-cout<<__LINE__<<endl;
+		glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/(3*sizeof(float))); // Starting from vertex 0 .. all the buffer 
 		// Ca aussi on peut l'enlever puisque le enable n'est plus fait ici !
 		/*glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);*/
 
 		// on desactive le VAO a la fin du dessin
 		glBindVertexArray (0);
-cout<<__LINE__<<endl;
 		// on desactive les shaders
 		glUseProgram(0);
 
-cout<<__LINE__<<endl;
     // Swap buffers
     glfwSwapBuffers(window);
     glfwPollEvents();
-cout<<__LINE__<<endl;
     // apres avoir recupere les evenements, on teste si la touche E est pressee et si c'est le cas
     // on re-genere des donnees
 	} // Vérifie si on a appuyé sur la touche échap (ESC) ou si la fenêtre a été fermée
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
 	glfwWindowShouldClose(window) == 0 );
-	cout<<__LINE__<<endl;
+
 }
