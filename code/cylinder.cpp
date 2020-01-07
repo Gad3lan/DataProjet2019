@@ -1,5 +1,5 @@
 // sous mac 
-// g++ -I/usr/local/include/ -lglfw -lGLEW main5.cpp -framework OpenGL  -omain5 
+// g++ -I/usr/local/include/ -lglfw -lGLEW cylinder.cpp -framework OpenGL  -ocylinder 
 // ./main5
 
 // sous linux 	
@@ -143,39 +143,26 @@ int main(){
 	    return -1;
 	}
 
-	int faceNb = 10;
+	int faceNb = 20;
 	float h = 0.5;
 	float r = 0.25;
 	float ctr1 = 0;
 	float ctr2 = 0;
-	GLfloat g_vertex_buffer_data[18*faceNb];
+	GLfloat g_vertex_buffer_data[6*faceNb];
 	for (int i = 0; i < faceNb; i++) {
-		float angle = (2*M_PI/faceNb)*i;
-		float nextAngle = (2*M_PI/faceNb)*(i+1);
-		g_vertex_buffer_data[18*i] = cos(angle)*r+ctr1;
-		g_vertex_buffer_data[18*i+1] = sin(angle)*r+ctr1;
-		g_vertex_buffer_data[18*i+2] = h;
-		g_vertex_buffer_data[18*i+3] = cos(nextAngle)*r+ctr1;
-		g_vertex_buffer_data[18*i+4] = sin(nextAngle)*r+ctr1;
-		g_vertex_buffer_data[18*i+5] = h;
-		g_vertex_buffer_data[18*i+6] = cos(angle)*r+ctr2;
-		g_vertex_buffer_data[18*i+7] = sin(angle)*r+ctr2;
-		g_vertex_buffer_data[18*i+8] = -h;
-		g_vertex_buffer_data[18*i+9] = cos(nextAngle)*r+ctr1;
-		g_vertex_buffer_data[18*i+10] = sin(nextAngle)*r+ctr1;
-		g_vertex_buffer_data[18*i+11] = h;
-		g_vertex_buffer_data[18*i+12] = cos(nextAngle)*r+ctr2;
-		g_vertex_buffer_data[18*i+13] = sin(nextAngle)*r+ctr2;
-		g_vertex_buffer_data[18*i+14] = -h;
-		g_vertex_buffer_data[18*i+15] = cos(angle)*r+ctr2;
-		g_vertex_buffer_data[18*i+16] = sin(angle)*r+ctr2;
-		g_vertex_buffer_data[18*i+17] = -h;
+		float angle = (2*M_PI/(faceNb-1))*i;
+		g_vertex_buffer_data[6*i] = cos(angle)*r+ctr1;
+		g_vertex_buffer_data[6*i+1] = sin(angle)*r+ctr1;
+		g_vertex_buffer_data[6*i+2] = h;
+		g_vertex_buffer_data[6*i+3] = cos(angle)*r+ctr2;
+		g_vertex_buffer_data[6*i+4] = sin(angle)*r+ctr2;
+		g_vertex_buffer_data[6*i+5] = -h;
 	}
-	GLfloat g_vertex_color_data[18*faceNb];
+	GLfloat g_vertex_color_data[6*faceNb];
 
   // on rajoute des faces et de la hauteur a notre figure
-	for (int i = 0; i < 18*faceNb; i++) {
-		g_vertex_color_data[i] = 1.0;
+	for (int i = 0; i < 6*faceNb; i++) {
+		g_vertex_color_data[i] = rand()%100/100.;
 	}		
 
 
@@ -277,7 +264,7 @@ int main(){
 		glUseProgram(ProgramID); 
 
 		// onchange de matrice de projection : la projection orthogonale est plus propice a la visualization !
-		//glm::mat4 projectionMatrix = glm::perspective(glm::radians(66.0f), 1024.0f / 768.0f, 0.1f, 200.0f);
+		//aglm::mat4 projectionMatrix = glm::perspective(glm::radians(66.0f), 1024.0f / 768.0f, 0.1f, 200.0f);
 		glm::mat4 projectionMatrix = glm::ortho( -1.0f, 1.0f, -1.0f, 1.0f, -3.f, 3.f );
 		glm::mat4 viewMatrix       = glm::lookAt(
 						                      vec3(1.5*cos(angle), 1.5*sin(angle), -0.5), // where is the camara
@@ -316,7 +303,7 @@ int main(){
 		glEnableVertexAttribArray(1);*/
 
 		// Draw the triangle(s) !
-		glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/(3*sizeof(float))); // Starting from vertex 0 .. all the buffer 
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(g_vertex_buffer_data)/(3*sizeof(float))); // Starting from vertex 0 .. all the buffer 
 
 		// Ca aussi on peut l'enlever puisque le enable n'est plus fait ici !
 		/*glDisableVertexAttribArray(0);
@@ -335,78 +322,7 @@ int main(){
 
     // apres avoir recupere les evenements, on teste si la touche E est pressee et si c'est le cas
     // on re-genere des donnees
-    if (glfwGetKey(window, GLFW_KEY_E ) == GLFW_PRESS){
-	    for (int i=0; i<N; i++){
-		    float r = (rand()%1000)/1000.0; 
-		    g_vertex_buffer_data[ 0+i*9*5] = 0.0;
-				g_vertex_buffer_data[ 1+i*9*5] = 0.0;
-				g_vertex_buffer_data[ 2+i*9*5] = 0.0;
-
-				g_vertex_buffer_data[ 3+i*9*5] = 0.0+r*cos((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[ 4+i*9*5] = 0.0+r*sin((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[ 5+i*9*5] = r/5.0;
-
-				g_vertex_buffer_data[ 6+i*9*5] = 0.0+r*cos((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[ 7+i*9*5] = 0.0+r*sin((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[ 8+i*9*5] = r/5.0;
-
-
-		    g_vertex_buffer_data[ 9+i*9*5] = 0.0;
-				g_vertex_buffer_data[10+i*9*5] = 0.0;
-				g_vertex_buffer_data[11+i*9*5] = 0.0;
-
-				g_vertex_buffer_data[12+i*9*5] = 0.0+r*cos((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[13+i*9*5] = 0.0+r*sin((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[14+i*9*5] = r/5.0;
-
-				g_vertex_buffer_data[15+i*9*5] = 0.0+r*cos((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[16+i*9*5] = 0.0+r*sin((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[17+i*9*5] = 0.0;
-
-
-		    g_vertex_buffer_data[18+i*9*5] = 0.0;
-				g_vertex_buffer_data[19+i*9*5] = 0.0;
-				g_vertex_buffer_data[20+i*9*5] = 0.0;
-
-				g_vertex_buffer_data[21+i*9*5] = 0.0+r*cos((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[22+i*9*5] = 0.0+r*sin((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[23+i*9*5] = r/5.0;
-
-				g_vertex_buffer_data[24+i*9*5] = 0.0+r*cos((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[25+i*9*5] = 0.0+r*sin((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[26+i*9*5] = 0.0;		
-
-
-				g_vertex_buffer_data[27+i*9*5] = 0.0+r*cos((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[28+i*9*5] = 0.0+r*sin((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[29+i*9*5] = r/5.0;
-
-				g_vertex_buffer_data[30+i*9*5] = 0.0+r*cos((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[31+i*9*5] = 0.0+r*sin((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[32+i*9*5] = r/5.0;
-
-				g_vertex_buffer_data[33+i*9*5] = 0.0+r*cos((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[34+i*9*5] = 0.0+r*sin((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[35+i*9*5] = 0.0;		
-
-				g_vertex_buffer_data[36+i*9*5] = 0.0+r*cos((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[37+i*9*5] = 0.0+r*sin((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[38+i*9*5] = r/5.0;
-
-				g_vertex_buffer_data[39+i*9*5] = 0.0+r*cos((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[40+i*9*5] = 0.0+r*sin((2*i+0)*M_PI/(N));
-				g_vertex_buffer_data[41+i*9*5] = 0.0;
-
-				g_vertex_buffer_data[42+i*9*5] = 0.0+r*cos((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[43+i*9*5] = 0.0+r*sin((2*i+1.9)*M_PI/(N));
-				g_vertex_buffer_data[44+i*9*5] = 0.0;		
-	    }
-    	// ici on n'envoie que les sommets car on souhaite garder les memes couleurs ... et le nombre
-	    // n'a pas change !
-    	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    	glBufferSubData(GL_ARRAY_BUFFER, 0,                            sizeof(g_vertex_buffer_data), g_vertex_buffer_data);
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
+	  // n'a pas change !
 
 	} // Vérifie si on a appuyé sur la touche échap (ESC) ou si la fenêtre a été fermée
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
