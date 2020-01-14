@@ -1,4 +1,5 @@
 #include "csvReader.h"
+#include "loadShaders.h"
 
 string readCSVFile(string name) {
 	ifstream file;
@@ -12,14 +13,14 @@ string readCSVFile(string name) {
 	return content;
 }
 
-void parse(string csv, string teams[20], int scores[20][38], int ranks[20][38]) {
-	istringstream iss(csv); 
-	for (int i = 0; i < 20; i++) {
+void parse(string csv, string teams[nbTeam], int scores[nbTeam][nbMatch], int ranks[nbTeam][nbMatch]) {
+	istringstream iss(csv);
+	for (int i = 0; i < nbTeam; i++) {
 		string line;
 		getline(iss, line, '\n');
 		istringstream streamLine(line);
 		getline(streamLine, teams[i], ',');
-		for (int j = 0; j < 38; j++) {
+		for (int j = 0; j < nbMatch; j++) {
 			string tmp;
 			getline(streamLine, tmp, ',');
 			ranks[i][j] = stoi(tmp);
@@ -32,9 +33,9 @@ void parse(string csv, string teams[20], int scores[20][38], int ranks[20][38]) 
 	}
 }
 
-void aff(int scores[20][38]) {
-	for (int i = 0; i < 20; i++) {
-		for (int j = 0; j < 38; j++) {
+void aff(int scores[nbTeam][nbMatch]) {
+	for (int i = 0; i < nbTeam; i++) {
+		for (int j = 0; j < nbMatch; j++) {
 			cout << scores[i][j] << " ";
 		}
 		cout << endl;

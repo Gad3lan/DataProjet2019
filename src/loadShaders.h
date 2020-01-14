@@ -17,6 +17,11 @@
 #include <fstream>
 #include <vector>
 
+const int nbMatch = 38;
+const int nbTeam = 20;
+const int nbFaces = 10;
+const int res = 10;
+
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path);
 
 #endif

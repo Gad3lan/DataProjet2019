@@ -1,35 +1,76 @@
 #include "curve.h"
 
-void addCylinder(int cylIdx, int nbFaces, vec3 p1, vec3 p2, vec4 color, GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[], int height) {
-	float r = (height/2)/20.0;
+float dot(vec3 v1, vec3 v2) {
+	return (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z);
+}
+
+float max(float a, float b) {
+	if (a > b)
+		return a;
+	return b;
+}
+
+void addCylinder(int cylIdx, vec3 p1, vec3 p2, vec4 color, GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[]) {
+	float r = .025;
+	vec3 normals[nbFaces];
+	vec3 light = vec3(0.0,cos(M_PI/4),sin(M_PI/4));
 	for (int i = 0; i < nbFaces; i++) {
-		float angle = (M_PI/nbFaces)*i;
+		float angle;
+		if (cylIdx%2 == 0) {
+			angle = (2*M_PI/(nbFaces-1))*i;
+		} else {
+			angle = (2*M_PI/(nbFaces-1))*(nbFaces-i);
+		}
 		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i] = p1.x;
-		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+1] = cos(angle)*r+p1.y;
-		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+2] = sin(angle)*r*p1.z;
+		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+1] = cos(angle)*r + p1.y;
+		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+2] = sin(angle)*r + p1.z;
 		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+3] = p2.x;
-		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+4] = cos(angle)*r+p2.y;
-		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+5] = sin(angle)*r+p2.z;
+		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+4] = cos(angle)*r + p2.y;
+		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+5] = sin(angle)*r + p2.z;
+		normals[i] = vec3(0, cos(angle), sin(angle));
 	}
+
 	for (int i = cylIdx*nbFaces*6; i < (cylIdx+1)*nbFaces*6; i+=3) {
-		g_vertex_color_data[i] = color.x;
-		g_vertex_color_data[i+1] = color.y;
-		g_vertex_color_data[i+2] = color.z;
+		int idx = (i - cylIdx*nbFaces*6)/6;
+		float shadow = max(dot(normals[idx], light), 0.2);
+		g_vertex_color_data[i] = color.x * shadow;
+		g_vertex_color_data[i+1] = color.y * shadow;
+		g_vertex_color_data[i+2] = color.z * shadow;
 	}
 }
 
-void generateCurve(GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[], int ranks[], int scores[], int nbFaces, int height) {
+float lerp(float point1, float point2, float coef) {
+	return (1-coef)*point1 + coef*point2;
+}
+
+void generateCurve(GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[], int ranks[], int scores[]) {
 	float r = rand()/(float)RAND_MAX;
 	float g = rand()/(float)RAND_MAX;
 	float b = rand()/(float)RAND_MAX;
-	vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
-	for (int i = 0; i < 75; i+=2) {
-		float h1 = ((19-ranks[i])/19.0 + scores[i]/98.0);
-		float h2 = ((19-ranks[i+1])/19.0 + scores[i+1]/98.0);
-		vec3 p1 = vec3((i-19)/19.0, h1, 0);
-		vec3 p2 = vec3((i-18.3)/19.0, h1, 0);
-		vec3 p3 = vec3((i-18)/19.0, h2, 0);
-		addCylinder(i, nbFaces, p1, p2, color, g_vertex_buffer_data, g_vertex_color_data, height);
-		addCylinder(i+1, nbFaces, p2, p3, color, g_vertex_buffer_data, g_vertex_color_data, height);
+	float xOff = nbMatch/2.0;
+	vec4 color = vec4(r, g, b, 1.0);
+	for (int i = 0; i < nbMatch; i++) {
+		float h[res+1];
+		h[0] = ((19-ranks[i])/19.0 + scores[i]/98.0)-.475;
+		if (i < nbMatch-1) {
+			h[res] = ((19-ranks[i+1])/19.0 + scores[i+1]/98.0)-.475;
+		} else {
+			h[res] = ((19-ranks[i])/19.0 + scores[i]/98.0)-.475;
+		}
+		for (int j = 1; j < res; j++) {
+			float a = M_PI*((float)(j-1)/(res-1))-M_PI/2;
+			h[j] = lerp(h[0], h[res], (sin(a)+1)/2);
+		}
+		float inc = 0;
+		for (int j = 0; j < res; j++) {
+			vec3 p1 = vec3((float)(i+inc)/xOff - 1, h[j]/2000., h[j]);
+			if (j == 0) {
+				inc += .5;
+			} else {
+				inc += 0.5/(res-1);
+			}
+			vec3 p2 = vec3((float)(i+inc)/xOff - 1, h[j]/2000., h[j+1]);
+			addCylinder(i*res+j, p1, p2, color, g_vertex_buffer_data, g_vertex_color_data);
+		}
 	}
 }

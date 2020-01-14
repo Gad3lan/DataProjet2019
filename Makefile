@@ -1,4 +1,4 @@
-CC = g++ -std=c++11
+CC = g++
 
 SRC_PATH = src
 BUILD_PATH = build
@@ -13,10 +13,10 @@ OBJ = $(patsubst $(SRC_PATH)/%.cpp,$(BUILD_PATH)/%.o,$(SRC))
 all: $(SRC) $(EXEC)
 	
 project: $(OBJ)
-	$(CC) $(CXXFLAGS) $(LIB) -o $@ $^
+	$(CC) $(CXXFLAGS) -o $@ $^ $(LIB)
 
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.cpp
-	$(CC) $(LDFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(CC) $(LDFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean: 
 	rm $(BUILD_PATH)/*.o

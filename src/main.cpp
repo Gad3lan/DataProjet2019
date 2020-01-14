@@ -13,6 +13,17 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "loadShaders.h"
 #include "csvReader.h"
 #include "curve.h"
@@ -22,11 +33,57 @@ using namespace std;
 using namespace glm;
 using namespace std;
 
-const int N = 40;
-const int nbMatch = 38;
-const int nbTeam = 20;
 // stocke les variables uniformes qui seront communes a tous les vertex dessines
 GLint uniform_proj, uniform_view, uniform_model;
+bool keys[1024];
+
+void rotate(float &yaw, float &roll) {
+	if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT]) {
+		yaw += M_PI/400;
+	}
+	if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT]) {
+		yaw -= M_PI/400;
+	}
+	if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP]) {
+		if (roll < M_PI/2)
+			roll += M_PI/400;
+	}
+	if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN]) {
+		if (roll > -M_PI/2)
+		roll -= M_PI/400;
+	}
+	if (keys[GLFW_KEY_R]) {
+		yaw = 3*M_PI/2;
+		roll = M_PI/6;
+	}
+}
+
+float scale(float &zoom) {
+	if (keys[GLFW_KEY_SPACE]) {
+		zoom -= 0.01;
+	}
+	if (keys[GLFW_KEY_LEFT_SHIFT]) {
+		zoom += 0.01;
+	}
+	if (keys[GLFW_KEY_R]) {
+		zoom = 1.0;
+	}
+}
+
+// Is called whenever a key is pressed/released via GLFW
+void KeyCallback( GLFWwindow *window, int key, int scancode, int action, int mode ) {
+	if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+	if (key >= 0 && key < 1024) {
+		if(action == GLFW_PRESS) {
+			keys[key] = true;
+		}
+		else if(action == GLFW_RELEASE) {
+			keys[key] = false;
+		}
+	}
+}
 
 int main() {
 	string rawCSV = readCSVFile("data/rankspts.csv");
@@ -35,15 +92,19 @@ int main() {
 	int scores[nbTeam][nbMatch];
 
 	parse(rawCSV, teams, scores, ranks);
-	aff(scores);
+	//aff(scores);
+	rawCSV = "";
 
 	if( !glfwInit() ) {
+
 	    fprintf( stderr, "Failed to initialize GLFW\n" );
 	  
 	    return -1;
+	} else {
+
 	}
 
-	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
+	glfwWindowHint(GLFW_SAMPLES, 2); // 4x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // On veut OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Pour rendre MacOS heureux ; ne devrait pas être nécessaire
@@ -51,23 +112,20 @@ int main() {
   glfwWindowHint(GLFW_DEPTH_BITS, 24);
   
 	// Ouvre une fenêtre et crée son contexte OpenGl
-	GLFWwindow* window; // (Dans le code source qui accompagne, cette variable est globale)
-	int width = 1024;
-	int height = 698;
-	window = glfwCreateWindow( width, height, "Main 05", NULL, NULL);
+ // (Dans le code source qui accompagne, cette variable est globale)
+	GLFWwindow* window = glfwCreateWindow( 1024, 768, "Projet", NULL, NULL);
 	if( window == NULL ){
 	    fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 	    glfwTerminate();
-	  
+	
 	    return -1;
 	}
 
-	int nbFaces = 3;
-	int nbVertex = 6*nbFaces*nbMatch*2;
+	int nbVertex = 6*nbFaces*nbMatch*res;
 	GLfloat g_vertex_buffer_data[nbTeam][nbVertex];
 	GLfloat g_vertex_color_data[nbTeam][nbVertex];
 	for (int i=0; i<nbTeam; i++){
-		generateCurve(g_vertex_buffer_data[i], g_vertex_color_data[i], ranks[i], scores[i], nbFaces, height);
+		generateCurve(g_vertex_buffer_data[i], g_vertex_color_data[i], ranks[i], scores[i]);
 	}
 	
 	glfwMakeContextCurrent(window); // Initialise GLEW
@@ -109,38 +167,56 @@ int main() {
 			GL_FLOAT, 
 			GL_FALSE, 
 			0, 
-			(void*)sizeof(g_vertex_buffer_data));
+			(void*)sizeof(g_vertex_buffer_data[i])
+		);
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray (0);
 	}
+	glBindVertexArray (0);
 
 	// Assure que l'on peut capturer la touche d'échappement enfoncée ci-dessous
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetKeyCallback( window, KeyCallback );
 
-	GLuint programID = LoadShaders( "src/SimpleVertexShader5.vertexshader", "src/SimpleFragmentShader5.fragmentshader" );
+	GLuint programID = LoadShaders( "src/SimpleVertexShader5.vs", "src/SimpleFragmentShader5.frag" );
   uniform_proj     = glGetUniformLocation(programID, "projectionMatrix");
 	uniform_view     = glGetUniformLocation(programID, "viewMatrix");
 	uniform_model    = glGetUniformLocation(programID, "modelMatrix");
 
  
-  float angle = 0.0f;
+	double lastTime = glfwGetTime();
+ 	int nbFrames = 0;
+	float yaw = 3*M_PI/2;
+	float roll = M_PI/6;
+	float zoom = 1.0;
 
 	do{
-		cout << 1 << endl;
-		angle += M_PI/200;
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		double currentTime = glfwGetTime();
+		nbFrames++;
+		if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1 sec ago
+				// printf and reset timer
+				printf("FPS: %d\n", nbFrames);
+				nbFrames = 0;
+				lastTime += 1.0;
+		}
 		// clear before every draw 1
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		rotate(yaw, roll);
+		scale(zoom);
+		if (zoom < 0.1)
+			zoom = 0.1;
     // Use our shader program
-		glUseProgram(programID); 
+		glUseProgram(programID);
+
 		// onchange de matrice de projection : la projection orthogonale est plus propice a la visualization !
-		//glm::mat4 projectionMatrix = glm::perspective(glm::radians(66.0f), 1024.0f / 768.0f, 0.1f, 200.0f);
-		glm::mat4 projectionMatrix = glm::ortho( -1.0f, 1.0f, -1.0f, 1.0f, -3.f, 3.f );
+		//glm::mat4 projectionMatrix = glm::perspective(glm::radians(zoom), 1024.0f / 768.0f, 0.1f, 1000.0f);
+		glm::mat4 projectionMatrix = glm::ortho( -zoom, zoom, -zoom, zoom, -3.f, 3.f );
 		glm::mat4 viewMatrix       = glm::lookAt(
-						                      vec3(1.5*cos(angle), 1.5*sin(angle), -0.5), // where is the camara
+						                      vec3(cos(yaw), sin(yaw), sin(roll)), // where is the camara
 						                      vec3(0,0,0.5), //where it looks
-						                      vec3(0,0, 1) // head is up
+						                      vec3(0,0,1) // head is up
 						                    );
 		glm::mat4 modelMatrix      = glm::mat4(1.0);
 
@@ -155,8 +231,8 @@ int main() {
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(g_vertex_buffer_data[i])/(3*sizeof(float))); // Starting from vertex 0 .. all the buffer 
 
 			// on desactive le VAO a la fin du dessin
-			glBindVertexArray (0);
 		}
+		glBindVertexArray (0);
 		// on desactive les shaders
 		glUseProgram(0);
 
