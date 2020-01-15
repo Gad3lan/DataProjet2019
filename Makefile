@@ -10,14 +10,12 @@ LDFLAGS = -I/usr/local/include/
 SRC := src/main.cpp src/curve.cpp src/loadShaders.cpp src/csvReader.cpp
 OBJ = $(patsubst $(SRC_PATH)/%.cpp,$(BUILD_PATH)/%.o,$(SRC))
 
-all: $(SRC) $(EXEC)
-	
-project: $(OBJ)
-	$(CC) $(CXXFLAGS) -o $@ $^ $(LIB)
+all: $(OBJ)
+	$(CC) $(CXXFLAGS) -o project $^ $(LIB)
 
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.cpp
 	$(CC) $(LDFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean: 
 	rm $(BUILD_PATH)/*.o
-	rm $(EXEC)
+	rm project

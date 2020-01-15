@@ -51,7 +51,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 }
 
 int main() {
-	// Reccupération des données
+	// Récupération des données
 	string rawCSV = readCSVFile("data/rankspts.csv");
 	string teams[nbTeam];
 	int ranks[nbTeam][nbMatch];
@@ -64,7 +64,7 @@ int main() {
 		return -1;
 	}
 
-	// Parametrage de GLFW
+	// Paramétrage de GLFW
 	glfwWindowHint(GLFW_SAMPLES, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
