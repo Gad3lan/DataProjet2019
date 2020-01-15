@@ -124,8 +124,9 @@ int main() {
 	int nbVertex = 6*nbFaces*nbMatch*res;
 	GLfloat g_vertex_buffer_data[nbTeam][nbVertex];
 	GLfloat g_vertex_color_data[nbTeam][nbVertex];
+	GLfloat g_vertex_depth_data[nbTeam][nbVertex];
 	for (int i=0; i<nbTeam; i++){
-		generateCurve(g_vertex_buffer_data[i], g_vertex_color_data[i], ranks[i], scores[i]);
+		generateCurve(g_vertex_buffer_data[i], g_vertex_color_data[i], g_vertex_depth_data[i], ranks[i], scores[i]);
 	}
 	
 	glfwMakeContextCurrent(window); // Initialise GLEW
@@ -149,9 +150,10 @@ int main() {
 	for (int i = 0; i < nbTeam; i++) {
 		glBindVertexArray(VertexArrayID[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer[i]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[i])+sizeof(g_vertex_color_data[i]), 0, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[i])+sizeof(g_vertex_color_data[i])+sizeof(g_vertex_depth_data[i]), 0, GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(g_vertex_buffer_data[i]), g_vertex_buffer_data[i]);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[i]), sizeof(g_vertex_color_data[i]), g_vertex_color_data[i]);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[i])+sizeof(g_vertex_color_data[i]), sizeof(g_vertex_depth_data[i]), g_vertex_depth_data[i]);
 		glVertexAttribPointer(
 			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -170,6 +172,15 @@ int main() {
 			(void*)sizeof(g_vertex_buffer_data[i])
 		);
 		glEnableVertexAttribArray(1);
+		glVertexAttribPointer( // same thing for the colors
+			2, 
+			3, 
+			GL_FLOAT, 
+			GL_FALSE, 
+			0, 
+			(void*)sizeof(g_vertex_depth_data[i])
+		);
+		glEnableVertexAttribArray(2);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 	glBindVertexArray (0);

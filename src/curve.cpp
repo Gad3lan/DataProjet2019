@@ -13,13 +13,16 @@ float max(float a, float b) {
 void addCylinder(int cylIdx, vec3 p1, vec3 p2, vec4 color, GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[]) {
 	float r = .025;
 	vec3 normals[nbFaces];
-	vec3 light = vec3(0.0,cos(M_PI/4),sin(M_PI/4));
+	vec3 light = vec3(0.0,cos(3*M_PI/4),sin(3*M_PI/4)); //Pour les demi cylindres
+	//vec3 light = vec3(0.0,cos(M_PI/4),sin(M_PI/4)); //Pour les cylindres entiers
 	for (int i = 0; i < nbFaces; i++) {
 		float angle;
 		if (cylIdx%2 == 0) {
-			angle = (2*M_PI/(nbFaces-1))*i;
+			angle = (M_PI/(nbFaces-1))*i + M_PI/2;
+			//angle = (2*M_PI/(nbFaces-1))*i;
 		} else {
-			angle = (2*M_PI/(nbFaces-1))*(nbFaces-i);
+			angle = (M_PI/(nbFaces-1))*(nbFaces - i - 1) + M_PI/2;
+			//angle = (2*M_PI/(nbFaces-1))*(nbFaces-i);
 		}
 		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i] = p1.x;
 		g_vertex_buffer_data[(cylIdx*nbFaces*6)+6*i+1] = cos(angle)*r + p1.y;
@@ -43,7 +46,7 @@ float lerp(float point1, float point2, float coef) {
 	return (1-coef)*point1 + coef*point2;
 }
 
-void generateCurve(GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[], int ranks[], int scores[]) {
+void generateCurve(GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[], GLfloat g_vertex_depth_data[], int ranks[], int scores[]) {
 	float r = rand()/(float)RAND_MAX;
 	float g = rand()/(float)RAND_MAX;
 	float b = rand()/(float)RAND_MAX;
@@ -63,14 +66,17 @@ void generateCurve(GLfloat g_vertex_buffer_data[], GLfloat g_vertex_color_data[]
 		}
 		float inc = 0;
 		for (int j = 0; j < res; j++) {
-			vec3 p1 = vec3((float)(i+inc)/xOff - 1, h[j]/2000., h[j]);
+			vec3 p1 = vec3((float)(i+inc)/xOff - 1, lerp(h[j], h[j+1], float(j)/res)/120., h[j]);
 			if (j == 0) {
 				inc += .5;
 			} else {
 				inc += 0.5/(res-1);
 			}
-			vec3 p2 = vec3((float)(i+inc)/xOff - 1, h[j]/2000., h[j+1]);
+			vec3 p2 = vec3((float)(i+inc)/xOff - 1, lerp(h[j], h[j+1], float(j)/res)/120., h[j+1]);
 			addCylinder(i*res+j, p1, p2, color, g_vertex_buffer_data, g_vertex_color_data);
+			for (int k = 0; k < nbFaces*6; k++) {
+				g_vertex_depth_data[((i*res+j)*nbFaces*6) + k] = lerp(h[j], h[j+1], float(j)/res)/120.;
+			}
 		}
 	}
 }
