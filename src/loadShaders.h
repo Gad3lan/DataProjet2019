@@ -22,6 +22,13 @@ const int nbTeam = 20;
 const int nbFaces = 10;
 const int res = 10;
 
+/**
+ * Chargement des shaders
+ * 
+ * @param vertex_file_path Chemin vers le vertex shader
+ * @param fragment_file_path Chemin vers le fragment shader
+ * @return GLuint 
+ */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path);
 
 #endif
